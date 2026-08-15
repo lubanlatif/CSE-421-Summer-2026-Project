@@ -1,0 +1,287 @@
+===============================================================================
+KA-CHOW NET: ROUTER CLI CONFIGURATIONS (COPY & PASTE FOR CISCO PACKET TRACER)
+Group ID: 1401 | Base Subnet: 10.38.0.0/16
+===============================================================================
+
+-------------------------------------------------------------------------------
+ROUTER 1: R-SS (Sheriff Station)
+Modules Required: HWIC-2T in slot 0/1 (Power off router before adding)
+-------------------------------------------------------------------------------
+enable
+configure terminal
+hostname R-SS
+no ip domain-lookup
+
+interface GigabitEthernet0/0
+ description SS LAN
+ ip address 10.38.0.1 255.255.254.0
+ no shutdown
+
+interface GigabitEthernet0/1
+ description Downtown Hub Transit
+ ip address 10.38.6.65 255.255.255.248
+ no shutdown
+
+interface Serial0/1/0
+ description SS-FVC Direct Link (DCE)
+ ip address 10.38.6.73 255.255.255.252
+ clock rate 64000
+ no shutdown
+
+interface Serial0/1/1
+ description SS-RBA Direct Link (DCE)
+ ip address 10.38.6.77 255.255.255.252
+ clock rate 64000
+ no shutdown
+
+ip dhcp excluded-address 10.38.0.1 10.38.0.10
+ip dhcp excluded-address 10.38.5.1 10.38.5.10
+ip dhcp excluded-address 10.38.2.1 10.38.2.10
+
+ip dhcp pool SS_POOL
+ network 10.38.0.0 255.255.254.0
+ default-router 10.38.0.1
+ dns-server 10.38.0.3
+
+ip dhcp pool RBA_POOL
+ network 10.38.5.0 255.255.255.128
+ default-router 10.38.5.1
+ dns-server 10.38.0.3
+
+ip dhcp pool DC_POOL
+ network 10.38.2.0 255.255.255.0
+ default-router 10.38.2.1
+ dns-server 10.38.0.3
+
+ip route 10.38.4.0 255.255.255.0 10.38.6.66
+ip route 10.38.3.0 255.255.255.0 10.38.6.68
+ip route 10.38.5.128 255.255.255.128 10.38.6.69
+ip route 10.38.6.0 255.255.255.192 10.38.6.68
+ip route 10.38.6.84 255.255.255.252 10.38.6.68
+
+router rip
+ version 2
+ network 10.0.0.0
+ passive-interface GigabitEthernet0/0
+ passive-interface Serial0/1/0
+ no auto-summary
+ redistribute static metric 1
+
+end
+write memory
+
+
+-------------------------------------------------------------------------------
+ROUTER 2: R-DC (Doc-Hudson Clinic)
+Modules Required: HWIC-2T in slot 0/1
+-------------------------------------------------------------------------------
+enable
+configure terminal
+hostname R-DC
+no ip domain-lookup
+
+interface GigabitEthernet0/0
+ description DC LAN
+ ip address 10.38.2.1 255.255.255.0
+ ip helper-address 10.38.6.65
+ no shutdown
+
+interface GigabitEthernet0/1
+ description Downtown Hub Transit
+ ip address 10.38.6.67 255.255.255.248
+ no shutdown
+
+interface Serial0/1/0
+ description RBA-DC Direct Link (DTE)
+ ip address 10.38.6.82 255.255.255.252
+ no shutdown
+
+router rip
+ version 2
+ network 10.0.0.0
+ passive-interface GigabitEthernet0/0
+ no auto-summary
+
+end
+write memory
+
+
+-------------------------------------------------------------------------------
+ROUTER 3: R-FVC (Flo V8 Cafe)
+Modules Required: HWIC-2T in slot 0/1
+-------------------------------------------------------------------------------
+enable
+configure terminal
+hostname R-FVC
+no ip domain-lookup
+
+interface GigabitEthernet0/0
+ description FVC LAN
+ ip address 10.38.3.1 255.255.255.0
+ no shutdown
+
+interface GigabitEthernet0/1
+ description Downtown Hub Transit
+ ip address 10.38.6.68 255.255.255.248
+ no shutdown
+
+interface Serial0/1/0
+ description SS-FVC Direct Link (DTE)
+ ip address 10.38.6.74 255.255.255.252
+ no shutdown
+
+interface Serial0/1/1
+ description FVC-WWM Link (DCE)
+ ip address 10.38.6.85 255.255.255.252
+ clock rate 64000
+ no shutdown
+
+ip route 10.38.0.0 255.255.254.0 Serial0/1/0
+ip route 10.38.2.0 255.255.255.0 GigabitEthernet0/1
+ip route 10.38.4.0 255.255.255.0 GigabitEthernet0/1
+ip route 10.38.5.0 255.255.255.128 GigabitEthernet0/1
+ip route 10.38.5.128 255.255.255.128 GigabitEthernet0/1
+ip route 10.38.6.0 255.255.255.192 Serial0/1/1
+ip route 10.38.6.76 255.255.255.252 GigabitEthernet0/1
+ip route 10.38.6.80 255.255.255.252 GigabitEthernet0/1
+
+! Recursive Backup Route to SS LAN via LCT (AD 10)
+ip route 10.38.0.0 255.255.254.0 10.38.4.1 10
+
+end
+write memory
+
+
+-------------------------------------------------------------------------------
+ROUTER 4: R-LCT (Luigi Casa-Della Tires)
+Modules Required: None (built-in Ethernet ports used)
+-------------------------------------------------------------------------------
+enable
+configure terminal
+hostname R-LCT
+no ip domain-lookup
+
+interface GigabitEthernet0/0
+ description LCT LAN
+ ip address 10.38.4.1 255.255.255.0
+ no shutdown
+
+interface GigabitEthernet0/1
+ description Downtown Hub Transit
+ ip address 10.38.6.66 255.255.255.248
+ no shutdown
+
+ip route 10.38.0.0 255.255.254.0 10.38.6.65
+ip route 10.38.2.0 255.255.255.0 10.38.6.67
+ip route 10.38.3.0 255.255.255.0 10.38.6.68
+ip route 10.38.5.0 255.255.255.128 10.38.6.65
+ip route 10.38.5.128 255.255.255.128 10.38.6.69
+ip route 10.38.6.0 255.255.255.192 10.38.6.68
+ip route 10.38.6.72 255.255.255.252 10.38.6.65
+ip route 10.38.6.76 255.255.255.252 10.38.6.65
+ip route 10.38.6.80 255.255.255.252 10.38.6.67
+ip route 10.38.6.84 255.255.255.252 10.38.6.68
+
+! Floating Static Backup Route to SS LAN via DC (AD 5)
+ip route 10.38.0.0 255.255.254.0 10.38.6.67 5
+
+end
+write memory
+
+
+-------------------------------------------------------------------------------
+ROUTER 5: R-RBA (Ramone Body Art)
+Modules Required: HWIC-2T in slot 0/1
+-------------------------------------------------------------------------------
+enable
+configure terminal
+hostname R-RBA
+no ip domain-lookup
+
+interface GigabitEthernet0/0
+ description RBA LAN
+ ip address 10.38.5.1 255.255.255.128
+ ip helper-address 10.38.6.77
+ no shutdown
+
+interface Serial0/1/0
+ description SS-RBA Direct Link (DTE)
+ ip address 10.38.6.78 255.255.255.252
+ no shutdown
+
+interface Serial0/1/1
+ description RBA-DC Direct Link (DCE)
+ ip address 10.38.6.81 255.255.255.252
+ clock rate 64000
+ no shutdown
+
+router rip
+ version 2
+ network 10.0.0.0
+ passive-interface GigabitEthernet0/0
+ no auto-summary
+
+end
+write memory
+
+
+-------------------------------------------------------------------------------
+ROUTER 6: R-MTY (Mater Tow Yard)
+Modules Required: None (built-in Ethernet ports used)
+-------------------------------------------------------------------------------
+enable
+configure terminal
+hostname R-MTY
+no ip domain-lookup
+
+interface GigabitEthernet0/0
+ description MTY LAN
+ ip address 10.38.5.129 255.255.255.128
+ ip helper-address 10.38.4.3
+ no shutdown
+
+interface GigabitEthernet0/1
+ description Downtown Hub Transit
+ ip address 10.38.6.69 255.255.255.248
+ no shutdown
+
+ip route 10.38.0.0 255.255.254.0 10.38.6.65
+ip route 10.38.2.0 255.255.255.0 10.38.6.67
+ip route 10.38.3.0 255.255.255.0 10.38.6.68
+ip route 10.38.4.0 255.255.255.0 10.38.6.66
+ip route 10.38.5.0 255.255.255.128 10.38.6.65
+ip route 10.38.6.0 255.255.255.192 10.38.6.68
+ip route 10.38.6.72 255.255.255.252 10.38.6.65
+ip route 10.38.6.76 255.255.255.252 10.38.6.65
+ip route 10.38.6.80 255.255.255.252 10.38.6.67
+ip route 10.38.6.84 255.255.255.252 10.38.6.68
+
+end
+write memory
+
+
+-------------------------------------------------------------------------------
+ROUTER 7: R-WWM (Wheel Well Motel)
+Modules Required: HWIC-2T in slot 0/1
+-------------------------------------------------------------------------------
+enable
+configure terminal
+hostname R-WWM
+no ip domain-lookup
+
+interface GigabitEthernet0/0
+ description WWM LAN
+ ip address 10.38.6.1 255.255.255.192
+ ip helper-address 10.38.3.4
+ no shutdown
+
+interface Serial0/1/0
+ description FVC-WWM Link (DTE)
+ ip address 10.38.6.86 255.255.255.252
+ no shutdown
+
+ip route 0.0.0.0 0.0.0.0 10.38.6.85
+
+end
+write memory
+===============================================================================
